@@ -20,7 +20,8 @@
     "@squirkle-ui/nuxt": "^0.2.0",
     "@squirkle-ui/ui": "^0.2.0",
     "nuxt": "^4.7.0",
-    "satori": "^0.63.2"
+    "satori": "^0.63.2",
+    "telegram": "^2.26.22"
   },
   "devDependencies": {
     "@fontsource/inter": "^5.3.0"

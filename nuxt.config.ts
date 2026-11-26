@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     contentRefreshSeconds: 60, // NUXT_CONTENT_REFRESH_SECONDS — how often to check for a new commit
     githubToken: '', // NUXT_GITHUB_TOKEN — optional, raises the GitHub API limit from 60 to 5000/h
     revalidateSecret: '', // NUXT_REVALIDATE_SECRET — for POST /api/revalidate (GitHub push webhook)
+    adminPassword: '', // NUXT_ADMIN_PASSWORD — unlocks /admin/telegram (falls back to NUXT_REVALIDATE_SECRET)
     public: {
       siteUrl: '', // NUXT_PUBLIC_SITE_URL — public origin; falls back to the request's own host
       webUrl: 'https://syndica-web.vercel.app/', // NUXT_PUBLIC_WEB_URL — the syndica-web app
@@ -48,5 +49,7 @@ export default defineNuxtConfig({
   routeRules: {
     // Always render fresh HTML so bots never get a stale or empty page.
     '/**': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } },
+    '/admin/**': { ssr: false, headers: { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' } },
+    '/api/admin/**': { headers: { 'cache-control': 'no-store' } },
   },
 })
