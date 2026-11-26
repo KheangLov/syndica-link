@@ -82,6 +82,21 @@ async function loadGithub(): Promise<Snapshot> {
   return finish(sha, site, posts, raw('public/'))
 }
 
+// No-API path (used when the GitHub API is rate-limited): list files via jsDelivr,
+// read them from raw.githubusercontent.com at the branch head (cached ≤5 min by GitHub).
+async function loadGithubNoApi(): Promise<Snapshot> {
+  const { repo, branch } = cfg()
+  const listing = await $fetch<{ files: { name: string }[] }>(`https://data.jsdelivr.com/v1/packages/gh/${repo}@${branch}`, {
+    query: { structure: 'flat' }, timeout: 8000,
+  })
+  const files = listing.files.map((f) => f.name.replace(/^\//, '')).filter((f) => /^public\/content\/posts\/[^/_][^/]*\.json$/.test(f))
+  if (!files.length) throw new Error('jsDelivr listing returned no posts')
+  const raw = (p: string) => `https://raw.githubusercontent.com/${repo}/${branch}/${p}`
+  const site = JSON.parse(await text(raw('public/content/site.json'))) as Site
+  const posts = await Promise.all(files.map(async (f) => normalize(f.split('/').pop()!.replace(/\.json$/, ''), await text(raw(f)), site)))
+  return finish(`${branch}-${hash(JSON.stringify(posts))}`, site, posts, raw('public/'))
+}
+
 async function loadPages(): Promise<Snapshot> {
   const { pagesUrl } = cfg()
   const site = JSON.parse(await text(`${pagesUrl}content/site.json?t=${Date.now()}`)) as Site
@@ -98,17 +113,41 @@ function finish(ref: string, site: Site, posts: (Post | null)[], assetBase: stri
   return { ref, site, posts: list, assetBase, loadedAt: Date.now() }
 }
 
+// Try each source in order until one works.
+async function loadAny(): Promise<Snapshot> {
+  const { mode } = cfg()
+  const sources = mode === 'pages' ? [loadPages, loadGithub, loadGithubNoApi] : [loadGithub, loadGithubNoApi, loadPages]
+  let last: unknown
+  for (const load of sources) {
+    try { return await load() } catch (e: any) {
+      last = e
+      console.warn(`[syndica-link] ${load.name} failed: ${e?.message || e}`)
+    }
+  }
+  throw last
+}
+
+// The last good snapshot is also kept on disk, so a restart during a GitHub outage still serves content.
+const disk = () => useStorage('data')
+async function saveSnapshot(snap: Snapshot) { try { await disk().setItem('content:snapshot', snap) } catch {} }
+async function readSnapshot() { try { return (await disk().getItem<Snapshot>('content:snapshot')) || undefined } catch { return undefined } }
+
 /** Current content. Refreshes in the background-safe way: one request at a time, stale data on errors. */
 export async function getContent(force = false): Promise<Snapshot> {
-  const { refreshMs, mode } = cfg()
+  const { refreshMs } = cfg()
   const fresh = state.snap && !force && Date.now() - state.checkedAt < refreshMs
   if (fresh) return state.snap!
   if (!state.inflight) {
-    state.inflight = (mode === 'pages' ? loadPages() : loadGithub())
-      .then((snap) => { state.snap = snap; state.checkedAt = Date.now(); return snap })
-      .catch((e) => {
+    state.inflight = loadAny()
+      .then((snap) => {
+        if (snap.ref !== state.snap?.ref) saveSnapshot(snap)
+        state.snap = snap
+        state.checkedAt = Date.now()
+        return snap
+      })
+      .catch(async (e) => {
         console.error('[syndica-link] content refresh failed:', e?.message || e)
-        if (!state.snap && mode === 'github') return loadPages().then((s) => (state.snap = s)) // first-load fallback
+        state.snap ??= await readSnapshot()
         if (!state.snap) throw e
         state.checkedAt = Date.now() - refreshMs / 2 // back off a little, keep serving the last good copy
         return state.snap

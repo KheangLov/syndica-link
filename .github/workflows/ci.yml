@@ -15,6 +15,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Smoke test — bot gets SEO tags
+        env:
+          NUXT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # avoids the shared-runner API rate limit
         run: |
           PORT=3000 node .output/server/index.mjs & sleep 6
           curl -sf -A "TelegramBot (like TwitterBot)" http://localhost:3000/ | grep -q 'property="og:title"'
