@@ -1,0 +1,28 @@
+{
+  "name": "syndica-link",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "node .output/server/index.mjs",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource/noto-sans-khmer": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "@squirkle-ui/nuxt": "^0.2.0",
+    "@squirkle-ui/ui": "^0.2.0",
+    "nuxt": "^4.7.0",
+    "satori": "^0.63.2"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "^5.3.0"
+  }
+}
