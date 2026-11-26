@@ -48,6 +48,5 @@ export default defineNuxtConfig({
   routeRules: {
     // Always render fresh HTML so bots never get a stale or empty page.
     '/**': { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } },
-    '/og/**': { headers: { 'cache-control': 'public, max-age=3600' } }, // share URLs carry ?v=, so a new version is a new URL
   },
 })

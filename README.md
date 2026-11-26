@@ -2,14 +2,14 @@
 
 The server-rendered share front for [syndica-web](https://github.com/KheangLov/syndica-web). It's a **Nuxt 4 (SSR)** app built with [squirkle-ui](https://www.npmjs.com/package/squirkle-ui). It reads posts straight from syndica-web's JSON and renders every page with its full SEO and social tags, so Telegram's preview bot always gets a complete card with no JavaScript needed.
 
-Routes mirror syndica-web: `/` and `/posts/<slug>` (a trailing slash also works).
+Routes mirror syndica-web: `/`, `/posts/<slug>` and `/tags/<tag>` (a trailing slash also works). No URL uses a query string.
 
 ## Why Telegram previews stay up to date
 
 1. **Content arrives live.** In `github` mode the server checks syndica-web's newest commit (every 60s by default) and reads its files *pinned to that commit SHA*. A push shows up within a minute, with no rebuild or Pages deploy to wait for. A GitHub push webhook on `POST /api/revalidate` makes it immediate.
 2. **Every page is server-rendered.** Title, description, Open Graph, Twitter, `article:*`, canonical, `telegram:channel` and JSON-LD are all in the HTML response, along with the post body. Bots never see an empty shell.
-3. **Share links are versioned.** Share buttons use `/posts/<slug>?v=<content-hash>`. Telegram caches previews per URL, so an edited post gets a new URL and a fresh card, with no manual `@WebpageBot` step. The canonical URL stays clean (no `?v`).
-4. **Preview images are generated on the server.** Posts without a cover get a 1200×630 card at `/og/<slug>.png?v=…`, drawn as soon as the page is requested so it's ready when the bot fetches it. Khmer is supported.
+3. **Share links carry the version in the path.** Share buttons use `/posts/<slug>/<content-hash>`. Telegram caches previews per URL, so an edited post gets a new URL and a fresh card, with no manual `@WebpageBot` step. The canonical URL stays `/posts/<slug>`, and readers who open a share link see the clean URL in the address bar.
+4. **Preview images are generated on the server.** Posts without a cover get a 1200×630 card at `/og/<slug>/<version>.png`, drawn as soon as the page is requested so it's ready when the bot fetches it. Khmer is supported.
 5. **No blank boxes.** Images are plain `<img>` tags in the server HTML, and content is loaded at boot. If GitHub is briefly unavailable, the last good copy is served.
 
 Also included: `sitemap.xml`, `robots.txt` and `feed.xml` (RSS).

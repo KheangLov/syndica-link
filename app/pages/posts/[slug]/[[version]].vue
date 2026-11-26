@@ -3,6 +3,11 @@ const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 const origin = useOrigin()
 
+// /posts/<slug>/<version> is the share link: same page, but a new URL whenever the content
+// changes, so Telegram fetches a fresh preview. Only a content hash is accepted there.
+const version = computed(() => (route.params.version ? String(route.params.version) : ''))
+if (version.value && !/^[a-f0-9]{6,40}$/.test(version.value)) throw createError({ statusCode: 404, statusMessage: 'Post not found', fatal: true })
+
 const { data, error } = await useFetch(() => `/api/posts/${slug.value}`, { key: () => `post:${slug.value}` })
 if (error.value) {
   throw createError({
@@ -17,9 +22,13 @@ const post = computed(() => data.value!.post)
 const site = computed(() => data.value!.site)
 
 const canonical = computed(() => `${origin}/posts/${post.value.slug}`)
-// The link to share: the version changes with the content, so Telegram treats an
-// edited post as a new URL and fetches a fresh preview instead of its cached one.
-const shareUrl = computed(() => `${canonical.value}?v=${post.value.version}`)
+// The link to share — the version is part of the path (no query string).
+const shareUrl = computed(() => `${origin}${versionedPath(post.value)}`)
+
+// Readers who open a share link see the clean canonical URL in the address bar.
+onMounted(() => {
+  if (version.value) history.replaceState(history.state, '', `/posts/${post.value.slug}`)
+})
 const image = computed(() => postImage(post.value, origin))
 const author = computed(() => post.value.author || site.value.author?.name || site.value.name)
 
@@ -91,7 +100,7 @@ const related = computed(() => {
 
       <header>
         <div class="article__tags">
-          <SqChip v-for="t in post.tags" :key="t" :to="{ path: '/', query: { tag: t } }" size="small" rounded="pill" link>#{{ t }}</SqChip>
+          <NuxtLink v-for="t in post.tags" :key="t" :to="`/tags/${encodeURIComponent(t)}`" class="tag-link"><SqChip size="small" rounded="pill" link>#{{ t }}</SqChip></NuxtLink>
         </div>
         <h1 class="article__title">{{ post.title }}</h1>
         <p class="article__lead">{{ post.description }}</p>
@@ -135,6 +144,7 @@ const related = computed(() => {
 .article { max-width: var(--prose-max); margin: 0 auto; padding-top: 12px; }
 .back { margin-left: -10px; margin-bottom: 20px; }
 .article__tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag-link { text-decoration: none; }
 .article__title { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; letter-spacing: -0.035em; margin: 16px 0 14px; font-weight: 750; text-wrap: balance; }
 .article__title:lang(km) { line-height: 1.45; letter-spacing: 0; }
 .article__lead { font-size: 1.2rem; line-height: 1.55; color: var(--sq-on-surface-variant); margin: 0 0 22px; }
