@@ -51,11 +51,10 @@ In **syndica-web → Settings → Webhooks**, add a webhook:
 
 ## Deploy
 
-This needs a Node server; GitHub Pages can't run SSR. Use any Node or Docker host (Render, Railway, Fly.io, a VPS…):
+Deployed on **Vercel** at `https://syndica-link.vercel.app`; it uses Nitro's Vercel preset automatically. Recommended environment variables in Vercel (**Project → Settings → Environment Variables**):
 
-```bash
-docker build -t syndica-link .
-docker run -p 3000:3000 -e NUXT_PUBLIC_SITE_URL=https://link.example.com syndica-link
-```
+- `NUXT_GITHUB_TOKEN`: a fine-grained, read-only token for syndica-web's contents. Every serverless cold start checks GitHub, and the limit without a token is 60 requests per hour per IP.
+- `NUXT_REVALIDATE_SECRET`: add it together with the push webhook below for instant updates.
+- `NUXT_PUBLIC_SITE_URL`: only needed for a custom domain.
 
-Then, in **syndica-web → Settings → Secrets and variables → Actions → Variables**, set `SHARE_BASE_URL` to the same public URL. syndica-web's share buttons will then hand out versioned syndica-link URLs, and its canonical tags will point here.
+The included `Dockerfile` runs it on any other Node host.

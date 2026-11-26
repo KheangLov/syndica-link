@@ -23,13 +23,13 @@ export default defineNuxtConfig({
     contentMode: 'github', // NUXT_CONTENT_MODE
     contentRepo: 'KheangLov/syndica-web', // NUXT_CONTENT_REPO
     contentBranch: 'main', // NUXT_CONTENT_BRANCH
-    contentPagesUrl: 'https://kheanglov.github.io/syndica-web/', // NUXT_CONTENT_PAGES_URL
+    contentPagesUrl: 'https://syndica-web.vercel.app/', // NUXT_CONTENT_PAGES_URL
     contentRefreshSeconds: 60, // NUXT_CONTENT_REFRESH_SECONDS — how often to check for a new commit
     githubToken: '', // NUXT_GITHUB_TOKEN — optional, raises the GitHub API limit from 60 to 5000/h
     revalidateSecret: '', // NUXT_REVALIDATE_SECRET — for POST /api/revalidate (GitHub push webhook)
     public: {
       siteUrl: '', // NUXT_PUBLIC_SITE_URL — public origin; falls back to the request's own host
-      webUrl: 'https://kheanglov.github.io/syndica-web/', // NUXT_PUBLIC_WEB_URL — the syndica-web app
+      webUrl: 'https://syndica-web.vercel.app/', // NUXT_PUBLIC_WEB_URL — the syndica-web app
     },
   },
 
