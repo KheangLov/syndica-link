@@ -15,6 +15,7 @@ export interface Post {
   tags: string[]; cover?: string; coverAlt?: string; accent: string; lang?: string
   featured?: boolean; author?: string; blocks: Block[]
   readingTime: number; version: string; image: string | null; imageAlt: string
+  imageWidth?: number; imageHeight?: number; imageType?: string
 }
 export interface Site {
   name: string; tagline: string; description: string; locale: string; accent: string
@@ -107,8 +108,32 @@ async function loadPages(): Promise<Snapshot> {
   return finish(hash(JSON.stringify(posts)), site, posts, pagesUrl)
 }
 
-function finish(ref: string, site: Site, posts: (Post | null)[], assetBase: string): Snapshot {
+// og:image:width/height for covers, read from the first bytes of the image (PNG/JPEG/WebP).
+async function coverSize(url: string) {
+  try {
+    const res = await fetch(url, { headers: { Range: 'bytes=0-65535', 'User-Agent': 'syndica-link' } })
+    const b = Buffer.from(await res.arrayBuffer())
+    if (b.readUInt32BE(0) === 0x89504e47) return { width: b.readUInt32BE(16), height: b.readUInt32BE(20), type: 'image/png' }
+    if (b[0] === 0xff && b[1] === 0xd8) {
+      for (let i = 2; i + 9 < b.length;) {
+        const m = b[i + 1], len = b.readUInt16BE(i + 2)
+        if (m >= 0xc0 && m <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(m)) return { height: b.readUInt16BE(i + 5), width: b.readUInt16BE(i + 7), type: 'image/jpeg' }
+        i += 2 + len
+      }
+    }
+    if (b.toString('ascii', 8, 12) === 'WEBP' && b.toString('ascii', 12, 16) === 'VP8X')
+      return { width: 1 + b.readUIntLE(24, 3), height: 1 + b.readUIntLE(27, 3), type: 'image/webp' }
+  } catch {}
+  return null
+}
+
+async function finish(ref: string, site: Site, posts: (Post | null)[], assetBase: string): Promise<Snapshot> {
   const list = posts.filter((p): p is Post => !!p).sort((a, b) => b.date.localeCompare(a.date))
+  await Promise.all(list.filter((p) => p.image).map(async (p) => {
+    const url = /^https?:/.test(p.image!) ? p.image! : assetBase + p.image!.replace(/^\//, '')
+    const size = await coverSize(url)
+    if (size) Object.assign(p, { imageWidth: size.width, imageHeight: size.height, imageType: size.type })
+  }))
   console.info(`[syndica-link] content @ ${ref.slice(0, 7)} — ${list.length} posts`)
   return { ref, site, posts: list, assetBase, loadedAt: Date.now() }
 }

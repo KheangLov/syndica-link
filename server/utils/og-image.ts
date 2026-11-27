@@ -1,5 +1,6 @@
 import satori from 'satori'
 import { Resvg } from '@resvg/resvg-js'
+import jpeg from 'jpeg-js'
 
 let fonts: Promise<any[]> | undefined
 function loadFonts() {
@@ -44,5 +45,7 @@ export async function renderOgImage(o: { title: string; eyebrow?: string; tags?:
     ),
   )
   const svg = await satori(tree as any, { width: 1200, height: 630, fonts: await loadFonts() })
-  return new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } }).render().asPng()
+  const img = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 }, background: '#0B1220' }).render()
+  // JPEG keeps the card ~60–90 KB — well under WhatsApp's limit (it silently drops large preview images).
+  return jpeg.encode({ data: img.pixels, width: img.width, height: img.height }, 86).data as Buffer
 }

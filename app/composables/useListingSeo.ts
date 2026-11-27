@@ -5,7 +5,7 @@ export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<an
   const origin = useOrigin()
   const url = `${origin}${o.path === '/' ? '/' : o.path}`
   // Version in the path, not a query string: changes whenever any post changes.
-  const image = computed(() => `${origin}/og/default/${hashList(o.posts.value)}.png`)
+  const image = computed(() => `${origin}/og/default/${hashList(o.posts.value)}.jpg`)
   useSeoMeta({
     title: o.title,
     description: o.description,
@@ -18,7 +18,7 @@ export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<an
     ogImage: image,
     ogImageWidth: 1200,
     ogImageHeight: 630,
-    ogImageType: 'image/png',
+    ogImageType: 'image/jpeg',
     ogImageAlt: o.title,
     twitterCard: 'summary_large_image',
     twitterSite: () => o.site.value.twitter || undefined,
