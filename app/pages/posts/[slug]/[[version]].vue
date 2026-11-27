@@ -30,6 +30,9 @@ onMounted(() => {
   if (version.value) history.replaceState(history.state, '', `/posts/${post.value.slug}`)
 })
 const image = computed(() => postImage(post.value, origin))
+const compact = useCompactPreview()
+// What crawlers get: Facebook/Messenger/WhatsApp → square tile (compact card); everyone else → wide card.
+const shareImage = computed(() => (compact.value ? `${origin}/og/${post.value.slug}/${post.value.version}-sq.jpg` : image.value))
 const author = computed(() => post.value.author || site.value.author?.name || site.value.name)
 
 // ---------- SEO (rendered on the server — no JavaScript needed by bots) ----------
@@ -43,11 +46,11 @@ useSeoMeta({
   ogTitle: () => post.value.title,
   ogDescription: () => post.value.description,
   ogUrl: canonical,
-  ogImage: image,
-  ogImageSecureUrl: image,
-  ogImageType: () => (post.value.image ? post.value.imageType : 'image/jpeg'),
-  ogImageWidth: () => (post.value.image ? post.value.imageWidth : 1200),
-  ogImageHeight: () => (post.value.image ? post.value.imageHeight : 630),
+  ogImage: shareImage,
+  ogImageSecureUrl: shareImage,
+  ogImageType: () => (compact.value || !post.value.image ? 'image/jpeg' : post.value.imageType),
+  ogImageWidth: () => (compact.value ? 400 : post.value.image ? post.value.imageWidth : 1200),
+  ogImageHeight: () => (compact.value ? 400 : post.value.image ? post.value.imageHeight : 630),
   ogImageAlt: () => post.value.imageAlt,
   articlePublishedTime: () => post.value.date,
   articleModifiedTime: () => post.value.updated || post.value.date,
@@ -57,7 +60,7 @@ useSeoMeta({
   twitterSite: () => site.value.twitter || undefined,
   twitterTitle: () => post.value.title,
   twitterDescription: () => post.value.description,
-  twitterImage: image,
+  twitterImage: image, // X always gets the wide card
   twitterImageAlt: () => post.value.imageAlt,
 })
 useHead({

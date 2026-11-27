@@ -30,7 +30,7 @@ const wrappable = (t: string) => {
 }
 
 /** Bump when the card design changes: it's part of every post version, so share links and image URLs change and caches refresh. */
-export const OG_DESIGN = 2
+export const OG_DESIGN = 3
 
 // Sized for the 540 px-wide safe column below.
 const titleSize = (t: string) => { const n = [...t].length * (/[\u1780-\u17FF]/.test(t) ? 0.75 : 1); return n > 85 ? 34 : n > 55 ? 40 : n > 32 ? 46 : n > 18 ? 56 : 66 }
@@ -69,4 +69,26 @@ export async function renderOgImage(o: { title: string; eyebrow?: string; tags?:
   const img = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 }, background: '#0B1220' }).render()
   // JPEG keeps the card ~60–90 KB — well under WhatsApp's limit (it silently drops large preview images).
   return jpeg.encode({ data: img.pixels, width: img.width, height: img.height }, 86).data as Buffer
+}
+
+/**
+ * 400×400 square card for Facebook, Messenger and WhatsApp. A small square image makes them
+ * use the compact layout (thumbnail on the left, title beside it), like LinkedIn links.
+ * The title is already shown next to it, so the image is a bold brand tile.
+ */
+export async function renderOgSquare(o: { site: string; accent?: string; label?: string }) {
+  const accent = o.accent || '#2AABEE'
+  const tree = h('div', {
+      width: 400, height: 400, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18,
+      backgroundColor: accent,
+      backgroundImage: 'radial-gradient(circle at 20% 15%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 55%), radial-gradient(circle at 90% 100%, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0) 60%)',
+      color: '#fff', fontFamily: 'Inter, Noto Sans Khmer',
+    },
+    h('div', { width: 150, height: 150, borderRadius: 46, background: 'rgba(255,255,255,0.18)', border: '3px solid rgba(255,255,255,0.55)', alignItems: 'center', justifyContent: 'center', fontSize: 96, fontWeight: 800 }, o.site.slice(0, 1)),
+    h('div', { fontSize: 40, fontWeight: 800, letterSpacing: -1 }, o.site),
+    o.label ? h('div', { fontSize: 22, fontWeight: 700, opacity: 0.85, padding: '6px 16px', borderRadius: 999, background: 'rgba(0,0,0,0.18)' }, o.label) : null,
+  )
+  const svg = await satori(tree as any, { width: 400, height: 400, fonts: await loadFonts() })
+  const img = new Resvg(svg, { fitTo: { mode: 'width', value: 400 }, background: accent }).render()
+  return jpeg.encode({ data: img.pixels, width: img.width, height: img.height }, 88).data as Buffer
 }

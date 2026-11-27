@@ -5,7 +5,9 @@ export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<an
   const origin = useOrigin()
   const url = `${origin}${o.path === '/' ? '/' : o.path}`
   // Version in the path, not a query string: changes whenever any post changes.
-  const image = computed(() => `${origin}/og/default/${hashList(o.posts.value)}.jpg`)
+  const compact = useCompactPreview()
+  const wide = computed(() => `${origin}/og/default/${hashList(o.posts.value)}.jpg`)
+  const image = computed(() => (compact.value ? `${origin}/og/default/${hashList(o.posts.value)}-sq.jpg` : wide.value))
   useSeoMeta({
     title: o.title,
     description: o.description,
@@ -16,15 +18,15 @@ export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<an
     ogDescription: o.description,
     ogUrl: url,
     ogImage: image,
-    ogImageWidth: 1200,
-    ogImageHeight: 630,
+    ogImageWidth: () => (compact.value ? 400 : 1200),
+    ogImageHeight: () => (compact.value ? 400 : 630),
     ogImageType: 'image/jpeg',
     ogImageAlt: o.title,
     twitterCard: 'summary_large_image',
     twitterSite: () => o.site.value.twitter || undefined,
     twitterTitle: o.title,
     twitterDescription: o.description,
-    twitterImage: image,
+    twitterImage: wide,
   })
   useHead({
     link: [{ rel: 'canonical', href: url }],
