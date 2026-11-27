@@ -4,7 +4,7 @@
 //  3. send the URLs to @WebpageBot so Telegram re-fetches them.
 // Telegram/Facebook steps run only when their credentials are configured.
 
-const AGENTS = ['facebookexternalhit/1.1', 'WhatsApp/2.24.1.6 A', 'TelegramBot (like TwitterBot)']
+const AGENTS = ['facebookexternalhit/1.1', 'TelegramBot (like TwitterBot)'] // compact tile + wide card
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export async function refreshPreviews(origin: string, slugs: string[] | 'all') {
