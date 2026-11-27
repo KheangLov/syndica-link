@@ -26,7 +26,7 @@ export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<an
     twitterSite: () => o.site.value.twitter || undefined,
     twitterTitle: o.title,
     twitterDescription: o.description,
-    twitterImage: wide,
+    twitterImage: image,
   })
   useHead({
     link: [{ rel: 'canonical', href: url }],

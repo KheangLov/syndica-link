@@ -60,7 +60,8 @@ useSeoMeta({
   twitterSite: () => site.value.twitter || undefined,
   twitterTitle: () => post.value.title,
   twitterDescription: () => post.value.description,
-  twitterImage: image, // X always gets the wide card
+  // Same image everywhere on the page, so no app can fall back to the wide card (X's crawler gets the wide one anyway).
+  twitterImage: shareImage,
   twitterImageAlt: () => post.value.imageAlt,
 })
 useHead({
@@ -74,7 +75,7 @@ useHead({
       '@type': 'BlogPosting',
       headline: post.value.title,
       description: post.value.description,
-      image: image.value,
+      image: shareImage.value,
       datePublished: post.value.date,
       dateModified: post.value.updated || post.value.date,
       author: { '@type': 'Person', name: author.value },

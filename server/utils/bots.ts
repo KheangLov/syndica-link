@@ -1,11 +1,12 @@
 // Which share image each requester gets.
 //
-// Facebook, Messenger and WhatsApp show the compact card (small thumbnail beside the title,
-// like LinkedIn company links) when the image is a small square. WhatsApp and Messenger build
-// previews on the sender's phone, and those requests don't reliably say who they are, so the
-// small square is the DEFAULT. Only crawlers whose apps suit a wide banner get the 1200×630 card.
+// - Telegram, LinkedIn, X, Slack, Discord, search engines → wide 1200×630 card (their layouts suit a banner).
+// - Facebook's crawler → 200×200 tile: Facebook shows small squares as the compact card (like LinkedIn logos).
+// - Everyone else, including WhatsApp and phones building previews themselves → 300×300 tile.
+//   WhatsApp ignores images under 300 px wide (it then falls back to another image on the page).
 const WIDE = /TelegramBot|LinkedInBot|Twitterbot|Slackbot|Discordbot|Applebot|Googlebot|bingbot|Pinterest|redditbot|SkypeUriPreview|Mastodon|Bluesky/i
+const FACEBOOK = /facebookexternalhit|facebookcatalog|Facebot|meta-externalagent/i
 
-/** Tile size for the compact card (200 px, like LinkedIn's logos), or 0 for the wide card. */
-export const compactTileSize = (ua = '') => (WIDE.test(ua) ? 0 : 200)
+/** Tile size in px for the compact card, or 0 for the wide card. */
+export const compactTileSize = (ua = '') => (WIDE.test(ua) ? 0 : FACEBOOK.test(ua) ? 200 : 300)
 export const isCompactPreviewBot = (ua = '') => compactTileSize(ua) > 0
