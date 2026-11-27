@@ -21,3 +21,17 @@ jobs:
           PORT=3000 node .output/server/index.mjs & sleep 6
           curl -sf -A "TelegramBot (like TwitterBot)" http://localhost:3000/ | grep -q 'property="og:title"'
           curl -sf http://localhost:3000/sitemap.xml | grep -q '<urlset'
+
+  # After Vercel deploys a push, pre-fetch every share image variant so the CDN serves them instantly.
+  warm-share-images:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for the Vercel deployment
+        run: sleep 150
+      - run: node scripts/warm-share-images.mjs https://syndica-link.vercel.app

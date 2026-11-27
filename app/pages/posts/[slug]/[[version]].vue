@@ -32,7 +32,7 @@ onMounted(() => {
 const image = computed(() => postImage(post.value, origin))
 const compact = useCompactPreview()
 // What crawlers get: Facebook/Messenger/WhatsApp → square tile (compact card); everyone else → wide card.
-const shareImage = computed(() => (compact.value ? `${origin}/og/${post.value.slug}/${post.value.version}-sq.jpg` : image.value))
+const shareImage = computed(() => (compact.value ? `${origin}/og/${post.value.slug}/${post.value.version}-sq${compact.value}.jpg` : image.value))
 const author = computed(() => post.value.author || site.value.author?.name || site.value.name)
 
 // ---------- SEO (rendered on the server — no JavaScript needed by bots) ----------
@@ -49,8 +49,8 @@ useSeoMeta({
   ogImage: shareImage,
   ogImageSecureUrl: shareImage,
   ogImageType: () => (compact.value || !post.value.image ? 'image/jpeg' : post.value.imageType),
-  ogImageWidth: () => (compact.value ? 400 : post.value.image ? post.value.imageWidth : 1200),
-  ogImageHeight: () => (compact.value ? 400 : post.value.image ? post.value.imageHeight : 630),
+  ogImageWidth: () => (compact.value ? compact.value : post.value.image ? post.value.imageWidth : 1200),
+  ogImageHeight: () => (compact.value ? compact.value : post.value.image ? post.value.imageHeight : 630),
   ogImageAlt: () => post.value.imageAlt,
   articlePublishedTime: () => post.value.date,
   articleModifiedTime: () => post.value.updated || post.value.date,
