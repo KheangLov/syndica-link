@@ -3,8 +3,7 @@ const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 const origin = useOrigin()
 
-// /posts/<slug>/<version> is the share link: same page, but a new URL whenever the content
-// changes, so Telegram fetches a fresh preview. Only a content hash is accepted there.
+// Older share links had a version segment (/posts/<slug>/<version>); they still work and show the clean URL.
 const version = computed(() => (route.params.version ? String(route.params.version) : ''))
 if (version.value && !/^[a-f0-9]{6,40}$/.test(version.value)) throw createError({ statusCode: 404, statusMessage: 'Post not found', fatal: true })
 
@@ -22,8 +21,9 @@ const post = computed(() => data.value!.post)
 const site = computed(() => data.value!.site)
 
 const canonical = computed(() => `${origin}/posts/${post.value.slug}`)
-// The link to share — the version is part of the path (no query string).
-const shareUrl = computed(() => `${origin}${versionedPath(post.value)}`)
+// The link to share is the clean canonical URL. Telegram and Facebook are told to re-fetch
+// it automatically after each publish (see syndica-web's refresh workflow).
+const shareUrl = canonical
 
 // Readers who open a share link see the clean canonical URL in the address bar.
 onMounted(() => {
@@ -87,7 +87,7 @@ useHead({
 })
 
 const toast = inject<(t: string) => void>('toast', () => {})
-async function copyShare() { if (await copyText(shareUrl.value)) toast('Fresh share link copied') }
+async function copyShare() { if (await copyText(shareUrl.value)) toast('Link copied') }
 
 const related = computed(() => {
   const p = post.value
@@ -126,7 +126,7 @@ const related = computed(() => {
       <SqSheet border rounded="xl" class="share-box">
         <div>
           <h2 class="section-title">Share this post</h2>
-          <p class="muted">This link always shows the latest version in Telegram — edits get a new link, so the preview is never stale.</p>
+          <p class="muted">Send it to a chat or channel. Previews refresh automatically after every update.</p>
         </div>
         <ShareBar :url="shareUrl" :title="post.title" />
         <div class="share-box__link">

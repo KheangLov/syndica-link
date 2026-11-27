@@ -8,7 +8,7 @@ Routes mirror syndica-web: `/`, `/posts/<slug>` and `/tags/<tag>` (a trailing sl
 
 1. **Content arrives live.** In `github` mode the server checks syndica-web's newest commit (every 60s by default) and reads its files *pinned to that commit SHA*. A push shows up within a minute, with no rebuild or Pages deploy to wait for. A GitHub push webhook on `POST /api/revalidate` makes it immediate.
 2. **Every page is server-rendered.** Title, description, Open Graph, Twitter, `article:*`, canonical, `telegram:channel` and JSON-LD are all in the HTML response, along with the post body. Bots never see an empty shell.
-3. **Share links carry the version in the path.** Share buttons use `/posts/<slug>/<content-hash>`. Telegram caches previews per URL, so an edited post gets a new URL and a fresh card, with no manual `@WebpageBot` step. The canonical URL stays `/posts/<slug>`, and readers who open a share link see the clean URL in the address bar.
+3. **Share links are plain URLs** (`/posts/<slug>`). After each publish, syndica-web's workflow asks Telegram (@WebpageBot) and Facebook/Messenger (Graph API re-scrape) to fetch them again, so cached previews update. WhatsApp builds previews on the sender's phone. Preview *image* URLs are versioned internally, so apps never reuse an old image.
 4. **Preview images are generated on the server.** Posts without a cover get a 1200×630 card at `/og/<slug>/<version>.png`, drawn as soon as the page is requested so it's ready when the bot fetches it. Khmer is supported.
 5. **No blank boxes.** Images are plain `<img>` tags in the server HTML, and content is loaded at boot. If GitHub is briefly unavailable, the last good copy is served.
 
