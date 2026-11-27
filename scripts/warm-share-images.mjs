@@ -8,6 +8,7 @@ const BASE = (process.argv[2] || process.env.LINK_URL || 'https://syndica-link.v
 const only = process.argv.slice(3)
 const AGENTS = {
   facebook: 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+  whatsapp: 'WhatsApp/2.24.1.6 A',
   telegram: 'TelegramBot (like TwitterBot)',
   phone: 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Mobile Safari/537.36',
 }
