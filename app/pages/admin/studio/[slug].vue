@@ -70,8 +70,8 @@ const drawing = reactive<Record<string, boolean>>({})
 let timer: any
 function drawKey(app: Exclude<Tab, 'default'>) {
   const r = resolved(app)
-  if (!r || r.image.kind === 'cover') return null
-  return JSON.stringify([r.imageKey, r.layout, draft.value.default || {}, draft.value[r.imageKey as keyof ShareSettings] || {}])
+  if (!r) return null
+  return JSON.stringify([r.imageKey, r.layout, r.image.kind, draft.value.default || {}, draft.value[r.imageKey as keyof ShareSettings] || {}])
 }
 async function drawAll() {
   for (const app of PREVIEW_APPS) {
@@ -79,7 +79,7 @@ async function drawAll() {
     const key = drawKey(app)
     if (!r || !key || images[key] || drawing[key]) continue
     drawing[key] = true
-    call<{ dataUrl: string }>('/api/admin/studio/render', { slug: slug.value, key: r.imageKey, square: r.layout === 'compact' ? 1 : 0, draft: draft.value })
+    call<{ dataUrl: string }>('/api/admin/studio/render', { slug: slug.value, key: r.imageKey, square: r.layout === 'compact' ? 1 : 0, cover: r.image.kind === 'cover', draft: draft.value })
       .then((res) => { images[key] = res.dataUrl })
       .catch((e) => toast(e.message, 'error'))
       .finally(() => { drawing[key] = false })
@@ -91,7 +91,7 @@ function previewProps(app: Exclude<Tab, 'default'>) {
   const key = drawKey(app)
   return {
     app, siteName: r.siteName, domain: domain.value, title: r.title, description: r.description, layout: r.layout,
-    image: r.image.kind === 'cover' ? r.image.url : key ? images[key] : undefined,
+    image: key ? images[key] : undefined,
     loading: !!(key && !images[key]),
   }
 }
@@ -231,8 +231,9 @@ const info = (k: Tab) => (k === 'default' || k === 'messenger' ? null : platform
               <SqSelect :model-value="block.layout || 'inherit'" :items="layoutItems" label="Card" hide-details @update:model-value="(v: any) => (block.layout = v === 'inherit' ? '' : v)" />
               <SqTextField v-model="block.title" label="Title" :placeholder="inherited?.title" :counter="info(tab)?.titleMax" persistent-placeholder />
               <SqTextarea v-model="block.description" label="Description" :placeholder="inherited?.description" :rows="3" auto-grow :counter="info(tab)?.descMax" persistent-placeholder />
-              <SqSelect :model-value="(data.images || []).includes(block.image) ? block.image : 'inherit'" :items="imageItems" label="Image" @update:model-value="(v: any) => (block.image = v === 'inherit' ? '' : v)" hint="An image from syndica-web. Large card: shown as is. Small thumbnail: cropped to a square." persistent-hint />
+              <SqSelect :model-value="(data.images || []).includes(block.image) ? block.image : 'inherit'" :items="imageItems" label="Image" @update:model-value="(v: any) => (block.image = v === 'inherit' ? '' : v)" hint="Any shape works: it's re-made at 1200×630 (large card) or as a square (thumbnail), under 300 KB." persistent-hint />
               <SqTextField v-model="block.image" label="…or image URL / path" placeholder="https://… or /images/…" hide-details />
+              <SqAlert v-if="/\.(webp|avif|heic|tiff?)(\b|$)/i.test(block.image || '')" type="warning" variant="tonal" density="compact" text="This format can't be used in share images, so apps will get the drawn card instead. Use a JPG, PNG, GIF or SVG." />
               <div class="row2">
                 <div class="color">
                   <label class="small muted">Accent colour</label>
@@ -307,11 +308,27 @@ const info = (k: Tab) => (k === 'default' || k === 'messenger' ? null : platform
         </section>
       </div>
     </template>
+    <!-- Phones: keep Save within thumb reach once something changed -->
+    <div v-if="data && dirty" class="savebar-space" />
+    <div v-if="data && dirty" class="savebar">
+      <span class="small">Unsaved changes</span>
+      <span class="grow" />
+      <SqBtn variant="text" size="small" @click="load">Discard</SqBtn>
+      <SqBtn size="small" :loading="saving" :disabled="!data.canSave" @click="save">Save & publish</SqBtn>
+    </div>
   </AdminShell>
 </template>
 
 <style scoped>
 .publish code { font-size: 0.85em; }
+.savebar, .savebar-space { display: none; }
+@media (max-width: 700px) {
+  .savebar { display: flex; align-items: center; gap: 8px; position: fixed; left: 12px; right: 12px; z-index: 20;
+    bottom: calc(12px + env(safe-area-inset-bottom)); padding: 8px 8px 8px 16px; border-radius: 18px;
+    background: var(--sq-surface, #fff); border: 1px solid var(--sq-border, rgba(0,0,0,.08)); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+  .savebar .grow { flex: 1; }
+  .savebar-space { display: block; height: 80px; }
+}
 .bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; font-size: 0.9rem; }
 .bar a { text-decoration: none; }
 .grow { flex: 1; }

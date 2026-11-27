@@ -32,6 +32,8 @@ An admin tool for previewing, testing and changing how each post looks when it's
 4. The studio shows a **live panel** with a chip per app that turns green when that app gets the new version. **Live status** runs the same check at any time.
 5. syndica-web rebuilds too, and its own static post pages follow the *All apps* title, description and image.
 
+Images of any shape or format work: covers and studio images are re-made at 1200×630 (large card) or as a square (thumbnail) JPEG under 300 KB. Close shapes are cropped to fill; portrait, square, panorama and tiny images are shown whole on a darkened copy or the accent colour; sideways phone photos are turned upright; transparent PNG/SVG get the accent behind them. WebP and unreadable images fall back to the drawn card, so a preview is never blank.
+
 Each app gets its own images: `/og/<slug>/<version>/<app>.jpg` (wide) and `/og/<slug>/<version>/<app>-sq256.jpg` (tile).
 
 ## Develop

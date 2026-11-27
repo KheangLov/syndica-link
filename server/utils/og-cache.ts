@@ -2,12 +2,14 @@
 import { resolveShare, requesterForImageKey, type ShareSettings } from '../../app/utils/share-meta'
 
 const cache = new Map<string, Promise<Buffer>>()
+/** `square` value for the re-made cover photo (1200×630). */
+export const COVER = -1
 const fmt = (d: string) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 
 /**
  * Draw a share image.
  * @param name   post slug, or 'default' for the site card
- * @param square 0 = wide 1200×630 card, otherwise the tile size in px
+ * @param square 0 = wide 1200×630 card, COVER = the cover photo re-made at 1200×630, otherwise the tile size in px
  * @param key    settings block the image is drawn for: 'default' or an app key (telegram, facebook, …)
  * @param draft  unsaved studio settings (bypasses the cache)
  */
@@ -23,9 +25,16 @@ export async function getOgPng(name: string, domain: string, square = 0, key = '
         : renderOgImage({ title: site.tagline, site: site.name, domain, accent: site.accent })
     }
     const r = resolveShare(post as any, site, requesterForImageKey(key), '', { assetBase: snap.assetBase, draft })
-    return square
-      ? renderOgSquare({ site: site.name, accent: r.accent, label: r.label ?? (post.tags[0] ? `#${post.tags[0]}` : undefined), size: square, imageUrl: r.customImage })
-      : renderOgImage({ title: r.title, eyebrow: fmt(post.date), tags: post.tags, accent: r.accent, site: site.name, domain })
+    const card = () => renderOgImage({ title: r.title, eyebrow: fmt(post.date), tags: post.tags, accent: r.accent, site: site.name, domain })
+    const tile = () => renderOgSquare({ site: site.name, accent: r.accent, label: r.label ?? (post.tags[0] ? `#${post.tags[0]}` : undefined), size: square })
+    // Any image that can't be fetched or read falls back to the drawn card: never a blank preview.
+    const orCard = (why: string) => (e: any) => { console.error(`[og] ${why} for ${post.slug}:`, e?.message); return square > 0 ? tile() : card() }
+    if (square === COVER) {
+      const src = r.coverSource || (r.customImage ?? (post.image || undefined))
+      return src ? renderPhotoCard(src, 1200, 630, r.accent).catch(orCard('cover unreadable')) : card()
+    }
+    if (square > 0) return r.customImage ? renderPhotoCard(r.customImage, 400, 400, r.accent, square).catch(orCard('tile image unreadable')) : tile()
+    return card()
   }
   if (draft) return render()
   const cacheKey = `${post ? `${post.slug}@${post.version}` : `default@${snap.ref}`}@${key}@${domain}@${square}`

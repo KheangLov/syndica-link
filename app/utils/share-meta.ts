@@ -79,6 +79,8 @@ export interface ResolvedShare {
   accent: string
   label?: string
   customImage?: string
+  /** The original cover / custom image that `-cover.jpg` is made from. */
+  coverSource?: string
 }
 
 interface PostLike {
@@ -117,11 +119,10 @@ export function resolveShare(
   let image: ResolvedShare['image']
   if (layout === 'compact') {
     image = { url: `${base}-sq${TILE}.jpg`, width: TILE, height: TILE, type: 'image/jpeg', alt: title, kind: 'tile' }
-  } else if (custom) {
-    image = { url: abs(custom), alt: title, kind: 'cover' }
-  } else if (post.image) {
-    // The post's own cover (it carries no title, so title overrides don't affect it).
-    image = { url: post.image, width: post.imageWidth, height: post.imageHeight, type: post.imageType, alt: post.imageAlt || title, kind: 'cover' }
+  } else if (custom || post.image) {
+    // A cover photo (custom, or the post's own) of any shape, size or format is re-made into a
+    // 1200×630 JPEG under 300 KB, so every app accepts it and crops it the same way.
+    image = { url: `${base}-cover.jpg`, width: 1200, height: 630, type: 'image/jpeg', alt: custom ? title : post.imageAlt || title, kind: 'cover' }
   } else {
     image = { url: `${base}.jpg`, width: 1200, height: 630, type: 'image/jpeg', alt: title, kind: 'wide' }
   }
@@ -129,8 +130,12 @@ export function resolveShare(
     requester, imageKey, layout, title, description, siteName: site.name, image,
     twitterCard: layout === 'compact' ? 'summary' : 'summary_large_image',
     accent, label, customImage: custom ? abs(custom) : undefined,
+    coverSource: layout === 'large' ? (custom ? abs(custom) : post.image ? abs(post.image) : undefined) : undefined,
   }
 }
+
+/** Valid image keys in /og/<slug>/<version>/<key>…jpg */
+export const IMAGE_KEYS = ['default', ...PLATFORMS.map((p) => p.key)]
 
 /** The requester whose settings an image key stands for (used when drawing an image). */
 export const requesterForImageKey = (k: string): Requester => (k === 'default' ? 'search' : (PLATFORMS.some((p) => p.key === k) ? (k as PlatformKey) : 'search'))
