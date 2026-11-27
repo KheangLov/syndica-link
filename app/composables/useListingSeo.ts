@@ -3,6 +3,7 @@ import type { ComputedRef } from 'vue'
 /** Server-rendered SEO/social tags for list pages (home, tag pages). */
 export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<any[]>; path: string; title: ComputedRef<string>; description: ComputedRef<string> }) {
   const origin = useOrigin()
+  const webBase = (useRuntimeConfig().public as any).webUrl as string
   const url = `${origin}${o.path === '/' ? '/' : o.path}`
   // Version in the path, not a query string: changes whenever any post changes.
   const compact = useCompactPreview()
@@ -29,7 +30,7 @@ export function useListingSeo(o: { site: ComputedRef<any>; posts: ComputedRef<an
     twitterImage: image,
   })
   useHead({
-    link: [{ rel: 'canonical', href: url }],
+    link: [{ rel: 'canonical', href: webUrlFor(o.path, webBase) }],
     meta: [{ name: 'telegram:channel', content: () => o.site.value.telegramChannel || undefined }],
     script: [{
       type: 'application/ld+json',

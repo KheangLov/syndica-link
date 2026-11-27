@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
+const webBase = (useRuntimeConfig().public as any).webUrl as string
 const slug = computed(() => String(route.params.slug))
 const origin = useOrigin()
 
@@ -20,7 +21,8 @@ const { data: index } = await useFetch('/api/site', { key: 'site' })
 const post = computed(() => data.value!.post)
 const site = computed(() => data.value!.site)
 
-const canonical = computed(() => `${origin}/posts/${post.value.slug}`)
+const canonical = computed(() => `${origin}/posts/${post.value.slug}`) // the share link (og:url)
+const webPage = computed(() => webUrlFor(`/posts/${post.value.slug}`, webBase)) // where the post lives (rel=canonical)
 // The link to share is the clean canonical URL. Telegram and Facebook are told to re-fetch
 // it automatically after each publish (see syndica-web's refresh workflow).
 const shareUrl = canonical
@@ -66,7 +68,7 @@ useSeoMeta({
 })
 useHead({
   htmlAttrs: { lang: () => post.value.lang || 'en' },
-  link: [{ rel: 'canonical', href: canonical }],
+  link: [{ rel: 'canonical', href: webPage }],
   meta: [{ name: 'telegram:channel', content: () => site.value.telegramChannel || undefined }],
   script: [{
     type: 'application/ld+json',
@@ -80,7 +82,7 @@ useHead({
       dateModified: post.value.updated || post.value.date,
       author: { '@type': 'Person', name: author.value },
       publisher: { '@type': 'Organization', name: site.value.name },
-      mainEntityOfPage: canonical.value,
+      mainEntityOfPage: webPage.value,
       inLanguage: post.value.lang || 'en',
       keywords: post.value.tags.join(', '),
     }),

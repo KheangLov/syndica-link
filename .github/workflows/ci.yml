@@ -20,7 +20,8 @@ jobs:
         run: |
           PORT=3000 node .output/server/index.mjs & sleep 6
           curl -sf -A "TelegramBot (like TwitterBot)" http://localhost:3000/ | grep -q 'property="og:title"'
-          curl -sf http://localhost:3000/sitemap.xml | grep -q '<urlset'
+          curl -sf -A "facebookexternalhit/1.1" http://localhost:3000/posts/khmer | grep -q 'property="og:image"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'sec-fetch-dest: document' http://localhost:3000/posts/khmer)" = 302
 
   # After Vercel deploys a push, pre-fetch every share image variant so the CDN serves them instantly.
   warm-share-images:

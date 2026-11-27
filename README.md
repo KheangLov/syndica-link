@@ -1,6 +1,6 @@
 # syndica-link
 
-The server-rendered share front for [syndica-web](https://github.com/KheangLov/syndica-web). It's a **Nuxt 4 (SSR)** app built with [squirkle-ui](https://www.npmjs.com/package/squirkle-ui). It reads posts straight from syndica-web's JSON and renders every page with its full SEO and social tags, so Telegram's preview bot always gets a complete card with no JavaScript needed.
+The share link for [syndica-web](https://github.com/KheangLov/syndica-web). **Posts live only on syndica-web**: when a link-preview app (Telegram, Facebook, Messenger, WhatsApp, LinkedIn…) fetches a syndica-link URL it gets server-rendered preview tags, and when a person opens it they are redirected (302) to the same page on syndica-web. It's a **Nuxt 4 (SSR)** app built with [squirkle-ui](https://www.npmjs.com/package/squirkle-ui). It reads posts straight from syndica-web's JSON and renders every page with its full SEO and social tags, so Telegram's preview bot always gets a complete card with no JavaScript needed.
 
 Routes mirror syndica-web: `/`, `/posts/<slug>` and `/tags/<tag>` (a trailing slash also works). No URL uses a query string.
 
