@@ -1,7 +1,7 @@
 // Preview images, versioned in the path (no query strings):
 //   /og/<slug>/<version>.jpg        wide 1200×630 card (Telegram, LinkedIn, X…)
-//   /og/<slug>/<version>-sq200.jpg  200×200 tile → Facebook's compact card (and Messenger)
-//   /og/<slug>/<version>-sq300.jpg  300×300 tile → WhatsApp and other apps (WhatsApp's minimum width)
+//   /og/<slug>/<version>-sq256.jpg  256×256 tile → compact card on Facebook, WhatsApp (and Messenger)
+//   (-sq200 / -sq300 still served for links shared earlier)
 //
 // This route must never fail: a missing image makes Messenger/WhatsApp drop the picture.
 // If drawing fails or takes too long, a built-in fallback image of the same size is sent instead.
@@ -12,8 +12,8 @@ export default defineEventHandler(async (event) => {
   const parts = String(getRouterParam(event, 'path') || '').split('/')
   const name = parts[0].replace(/\.(png|jpe?g)$/, '')
   if (!name || parts.length > 2) throw createError({ statusCode: 404 })
-  const m = (parts[parts.length - 1] || '').match(/-sq(200|300)?\.(jpg|png)$/)
-  const square = m ? Number(m[1] || 300) : 0
+  const m = (parts[parts.length - 1] || '').match(/-sq(200|256|300)?\.(jpg|png)$/)
+  const square = m ? Number(m[1] || 256) : 0
 
   let img: Buffer | null = null
   let ok = true

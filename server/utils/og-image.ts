@@ -72,7 +72,7 @@ export async function renderOgImage(o: { title: string; eyebrow?: string; tags?:
 }
 
 /**
- * Small square card (drawn at 400, output at 200 or 300 px) for Facebook, Messenger and WhatsApp. A small square image makes them
+ * Small square card (drawn at 400, output at 256 px) for Facebook, Messenger and WhatsApp. A small square image makes them
  * use the compact layout (thumbnail on the left, title beside it), like LinkedIn links.
  * The title is already shown next to it, so the image is a bold brand tile.
  */
