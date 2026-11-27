@@ -62,7 +62,7 @@ function normalize(slug: string, raw: string, site: Site): Post | null {
     blocks: p.blocks || [],
     accent: p.accent || site.accent,
     readingTime: readingTime(p.blocks),
-    version: hash(raw + JSON.stringify(site)), // changes whenever the post (or site name/branding) changes
+    version: hash(raw + JSON.stringify(site) + OG_DESIGN), // changes with the post, site branding or card design
     image: p.cover || null, // null → generated /og/<slug>.png
     imageAlt: p.cover ? p.coverAlt || p.title : `${p.title} — ${site.name}`,
   }
