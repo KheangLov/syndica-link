@@ -25,6 +25,7 @@ const time = (s: string) => new Date(s).toLocaleTimeString()
 
 <template>
   <div class="wrap log">
+    <nav class="adminnav"><NuxtLink to="/admin/studio">Share studio</NuxtLink> · <NuxtLink to="/admin/previews">Preview log</NuxtLink> · <NuxtLink to="/admin/telegram">Telegram login</NuxtLink></nav>
     <header class="head">
       <span class="eyebrow">Admin</span>
       <h1>Preview log</h1>
@@ -61,4 +62,6 @@ const time = (s: string) => new Date(s).toLocaleTimeString()
 .row1 { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .path { font-size: 0.8rem; word-break: break-all; }
 .ua { word-break: break-all; font-family: var(--sq-font-mono, ui-monospace, monospace); font-size: 0.75rem; }
+.adminnav { padding-top: 20px; font-size: 0.85rem; color: var(--sq-on-surface-variant); }
+.adminnav a { color: var(--sq-primary); text-decoration: none; }
 </style>

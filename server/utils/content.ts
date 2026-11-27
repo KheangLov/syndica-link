@@ -11,6 +11,7 @@ import { readingTime } from '../../app/utils/inline.js'
 
 export interface Block { type: string; text?: string; items?: string[]; [k: string]: unknown }
 export interface Post {
+  share?: Record<string, Record<string, string>>
   slug: string; title: string; description: string; date: string; updated?: string
   tags: string[]; cover?: string; coverAlt?: string; accent: string; lang?: string
   featured?: boolean; author?: string; blocks: Block[]
@@ -22,7 +23,7 @@ export interface Site {
   author?: { name?: string; avatar?: string; telegram?: string }
   telegramChannel?: string; twitter?: string
 }
-interface Snapshot { ref: string; site: Site; posts: Post[]; assetBase: string; loadedAt: number }
+interface Snapshot { ref: string; site: Site; posts: Post[]; assetBase: string; loadedAt: number; images?: string[] }
 
 const state: { snap?: Snapshot; checkedAt: number; inflight?: Promise<Snapshot> } = { checkedAt: 0 }
 
@@ -72,6 +73,7 @@ async function loadGithub(): Promise<Snapshot> {
   const { repo, branch } = cfg()
   const sha = (await gh<string>(`/repos/${repo}/commits/${branch}`, 'application/vnd.github.sha')).trim()
   if (state.snap?.ref === sha) return { ...state.snap, loadedAt: Date.now() }
+  // (images: paths under public/images, for the Share studio's image picker)
 
   const raw = (p: string) => `https://raw.githubusercontent.com/${repo}/${sha}/${p}`
   const tree = await gh<{ tree: { path: string; type: string }[] }>(`/repos/${repo}/git/trees/${sha}?recursive=1`)
@@ -80,7 +82,8 @@ async function loadGithub(): Promise<Snapshot> {
   const posts = await Promise.all(
     files.map(async (f) => normalize(f.path.split('/').pop()!.replace(/\.json$/, ''), await text(raw(f.path)), site)),
   )
-  return finish(sha, site, posts, raw('public/'))
+  const images = tree.tree.filter((f) => f.type === 'blob' && /^public\/images\/.+\.(png|jpe?g|webp|gif)$/i.test(f.path)).map((f) => f.path.replace(/^public/, ''))
+  return { ...(await finish(sha, site, posts, raw('public/'))), images }
 }
 
 // No-API path (used when the GitHub API is rate-limited): list files via jsDelivr,

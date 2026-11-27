@@ -32,9 +32,11 @@ onMounted(() => {
   if (version.value) history.replaceState(history.state, '', `/posts/${post.value.slug}`)
 })
 const image = computed(() => postImage(post.value, origin))
-const compact = useCompactPreview()
-// What crawlers get: Facebook/Messenger/WhatsApp → square tile (compact card); everyone else → wide card.
-const shareImage = computed(() => (compact.value ? `${origin}/og/${post.value.slug}/${post.value.version}-sq${compact.value}.jpg` : image.value))
+// Which app is asking (from its user agent), and what that app should get — its Share-studio
+// settings merged over the defaults: title, description, one image, large or compact card.
+const requester = useRequester()
+const share = computed(() => resolveShare(post.value as any, site.value, requester.value, origin, { assetBase: data.value!.assetBase }))
+const shareImage = computed(() => share.value.image.url)
 const author = computed(() => post.value.author || site.value.author?.name || site.value.name)
 
 // ---------- SEO (rendered on the server — no JavaScript needed by bots) ----------
@@ -45,26 +47,26 @@ useSeoMeta({
   ogType: 'article',
   ogSiteName: () => site.value.name,
   ogLocale: () => (post.value.lang === 'km' ? 'km_KH' : site.value.locale),
-  ogTitle: () => post.value.title,
-  ogDescription: () => post.value.description,
+  ogTitle: () => share.value.title,
+  ogDescription: () => share.value.description,
   ogUrl: canonical,
   ogImage: shareImage,
   ogImageSecureUrl: shareImage,
-  ogImageType: () => (compact.value || !post.value.image ? 'image/jpeg' : post.value.imageType),
-  ogImageWidth: () => (compact.value ? compact.value : post.value.image ? post.value.imageWidth : 1200),
-  ogImageHeight: () => (compact.value ? compact.value : post.value.image ? post.value.imageHeight : 630),
-  ogImageAlt: () => post.value.imageAlt,
+  ogImageType: () => share.value.image.type,
+  ogImageWidth: () => share.value.image.width,
+  ogImageHeight: () => share.value.image.height,
+  ogImageAlt: () => share.value.image.alt,
   articlePublishedTime: () => post.value.date,
   articleModifiedTime: () => post.value.updated || post.value.date,
   articleAuthor: () => [author.value],
   articleTag: () => post.value.tags,
-  twitterCard: 'summary_large_image',
+  twitterCard: () => share.value.twitterCard,
   twitterSite: () => site.value.twitter || undefined,
-  twitterTitle: () => post.value.title,
-  twitterDescription: () => post.value.description,
+  twitterTitle: () => share.value.title,
+  twitterDescription: () => share.value.description,
   // Same image everywhere on the page, so no app can fall back to the wide card (X's crawler gets the wide one anyway).
   twitterImage: shareImage,
-  twitterImageAlt: () => post.value.imageAlt,
+  twitterImageAlt: () => share.value.image.alt,
 })
 useHead({
   htmlAttrs: { lang: () => post.value.lang || 'en' },

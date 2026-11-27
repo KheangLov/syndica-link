@@ -1,17 +1,23 @@
+import { PLATFORMS } from '../../app/utils/share-meta'
 // Refresh cached link previews after a post is published or edited:
 //  1. warm every share-image variant in Vercel's CDN (Facebook/Messenger, WhatsApp, Telegram),
 //  2. ask Facebook to re-scrape the URLs (covers Messenger too),
 //  3. send the URLs to @WebpageBot so Telegram re-fetches them.
 // Telegram/Facebook steps run only when their credentials are configured.
 
-// One request per image variant: Facebook/Messenger tile (200), WhatsApp/others tile (300), wide card.
-const AGENTS = ['facebookexternalhit/1.1', 'WhatsApp/2.24.1.6 A', 'TelegramBot (like TwitterBot)']
+// One request per app: each gets its own image (Share-studio settings), so warm them all.
+const AGENTS = PLATFORMS.map((p) => p.ua)
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-export async function refreshPreviews(origin: string, slugs: string[] | 'all') {
+const recent = new Map<string, number>()
+
+export async function refreshPreviews(origin: string, slugs: string[] | 'all', opts: { force?: boolean } = {}) {
   const c = useRuntimeConfig()
   const snap = await getContent()
-  const posts = slugs === 'all' ? snap.posts : snap.posts.filter((p) => slugs.includes(p.slug))
+  // Skip posts already refreshed at this exact version in the last 10 minutes (webhook + studio save).
+  const posts = (slugs === 'all' ? snap.posts : snap.posts.filter((p) => slugs.includes(p.slug)))
+    .filter((p) => opts.force || Date.now() - (recent.get(`${p.slug}@${p.version}`) || 0) > 10 * 60_000)
+  for (const p of posts) recent.set(`${p.slug}@${p.version}`, Date.now())
   const urls = posts.flatMap((p) => [`${origin}/posts/${p.slug}`, `${origin}/posts/${p.slug}/`])
   const report: string[] = []
   const log = (m: string) => { report.push(m); console.info('[preview-refresh]', m) }

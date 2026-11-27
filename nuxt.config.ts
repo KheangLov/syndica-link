@@ -11,7 +11,7 @@ export default defineNuxtConfig({
       defaultTheme: 'light',
       themes: { light: { colors: { primary: '#229ED9' } }, dark: { colors: { primary: '#2AABEE' } } },
     },
-    appearance: { font: "'Geist Variable', system-ui, sans-serif", radiusScale: 1.1, smoothing: 0.7 },
+    appearance: { font: "'Geist Variable', 'Noto Sans Khmer', system-ui, sans-serif", radiusScale: 1.1, smoothing: 0.7 },
     icons: { api: false }, // icons are inline SVG paths
   },
 
@@ -26,6 +26,7 @@ export default defineNuxtConfig({
     contentPagesUrl: 'https://syndica-web.vercel.app/', // NUXT_CONTENT_PAGES_URL
     contentRefreshSeconds: 60, // NUXT_CONTENT_REFRESH_SECONDS — how often to check for a new commit
     githubToken: '', // NUXT_GITHUB_TOKEN — optional, raises the GitHub API limit from 60 to 5000/h
+    githubWriteToken: '', // NUXT_GITHUB_WRITE_TOKEN — Contents: read & write on syndica-web, for Share studio saves
     revalidateSecret: '', // NUXT_REVALIDATE_SECRET — for POST /api/revalidate (GitHub push webhook)
     adminPassword: '', // NUXT_ADMIN_PASSWORD — unlocks /admin/telegram (falls back to NUXT_REVALIDATE_SECRET)
     // Link-preview refresh after a publish (webhook → /api/revalidate). All optional.

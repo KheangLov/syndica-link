@@ -47,6 +47,7 @@ function restart() { step.value = 'start'; needPassword.value = false; form.code
 
 <template>
   <div class="wrap admin">
+    <nav class="adminnav"><NuxtLink to="/admin/studio">Share studio</NuxtLink> · <NuxtLink to="/admin/previews">Preview log</NuxtLink> · <NuxtLink to="/admin/telegram">Telegram login</NuxtLink></nav>
     <header class="head">
       <span class="eyebrow">Admin · one-time setup</span>
       <h1>Telegram login</h1>
@@ -114,4 +115,6 @@ function restart() { step.value = 'start'; needPassword.value = false; form.code
 .label { font-size: 0.8rem; font-weight: 600; color: var(--sq-on-surface-variant); margin-bottom: -10px; }
 .session { width: 100%; box-sizing: border-box; font: 0.75rem/1.5 var(--sq-font-mono, ui-monospace, monospace); padding: 12px; border-radius: var(--sq-radius-md); border: 1px solid var(--sq-border); background: var(--sq-surface-variant); color: var(--sq-on-surface); resize: none; word-break: break-all; }
 .next { margin: 0; padding-left: 1.2em; font-size: 0.9rem; line-height: 1.6; display: flex; flex-direction: column; gap: 4px; }
+.adminnav { padding-top: 20px; font-size: 0.85rem; color: var(--sq-on-surface-variant); }
+.adminnav a { color: var(--sq-primary); text-decoration: none; }
 </style>

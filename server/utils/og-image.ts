@@ -76,9 +76,21 @@ export async function renderOgImage(o: { title: string; eyebrow?: string; tags?:
  * use the compact layout (thumbnail on the left, title beside it), like LinkedIn links.
  * The title is already shown next to it, so the image is a bold brand tile.
  */
-export async function renderOgSquare(o: { site: string; accent?: string; label?: string; size?: number }) {
+export async function renderOgSquare(o: { site: string; accent?: string; label?: string; size?: number; imageUrl?: string }) {
   const size = o.size || 300
   const accent = o.accent || '#2AABEE'
+  // A custom image (from the Share studio) becomes the tile, centre-cropped to a square.
+  if (o.imageUrl) {
+    const res = await fetch(o.imageUrl, { headers: { 'User-Agent': 'syndica-link' } })
+    if (!res.ok) throw new Error(`image ${res.status}`)
+    const type = res.headers.get('content-type') || 'image/jpeg'
+    const src = `data:${type};base64,${Buffer.from(await res.arrayBuffer()).toString('base64')}`
+    const photo = { type: 'div', props: { style: { display: 'flex', width: 400, height: 400, backgroundColor: accent },
+      children: [{ type: 'img', props: { src, width: 400, height: 400, style: { width: 400, height: 400, objectFit: 'cover' } } }] } }
+    const svg = await satori(photo as any, { width: 400, height: 400, fonts: await loadFonts() })
+    const img = new Resvg(svg, { fitTo: { mode: 'width', value: size }, background: accent }).render()
+    return jpeg.encode({ data: img.pixels, width: img.width, height: img.height }, 88).data as Buffer
+  }
   const tree = h('div', {
       width: 400, height: 400, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18,
       backgroundColor: accent,

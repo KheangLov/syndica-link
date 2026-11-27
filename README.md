@@ -14,6 +14,18 @@ Routes mirror syndica-web: `/`, `/posts/<slug>` and `/tags/<tag>` (a trailing sl
 
 Also included: `sitemap.xml`, `robots.txt` and `feed.xml` (RSS).
 
+## Share studio (`/admin/studio`)
+
+An admin tool for previewing, testing and changing how each post looks when it's shared. Sign in with `NUXT_ADMIN_PASSWORD`.
+
+- **Per-app settings** for Telegram, Facebook, WhatsApp, LinkedIn, X, Discord and Slack: title, description, image, accent colour, tile label, and large card or small thumbnail. Each app inherits from *All apps*, which inherits from the post. Messenger uses Facebook's settings when Meta's servers fetch the link, and WhatsApp's when the sender's phone does.
+- **Live mock previews** of every app's card, updated as you type. Images are drawn from the unsaved settings.
+- **Live check:** fetches the published page exactly as the chosen app's crawler does, then checks it against that app's rules (title and description length, one image, file size and dimensions, which layout it will show).
+- **Test tools:** fresh never-shared test links, open-in-app buttons, the Facebook Sharing Debugger and LinkedIn Post Inspector, and **Refresh apps now** (image warm-up, Facebook re-scrape, @WebpageBot).
+- **Save & publish** commits the settings into the post's JSON in syndica-web (`"share": { "default": {…}, "facebook": {…}, … }`), so posts and their share settings live only there. The publish refresh then updates the apps. This needs `NUXT_GITHUB_WRITE_TOKEN`: a fine-grained token with **Contents: read and write** on syndica-web.
+
+Each app gets its own images: `/og/<slug>/<version>/<app>.jpg` (wide) and `/og/<slug>/<version>/<app>-sq256.jpg` (tile).
+
 ## Develop
 
 ```bash
