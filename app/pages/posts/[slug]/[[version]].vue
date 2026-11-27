@@ -70,8 +70,13 @@ useSeoMeta({
 })
 useHead({
   htmlAttrs: { lang: () => post.value.lang || 'en' },
-  link: [{ rel: 'canonical', href: webPage }],
+  link: [
+    { rel: 'canonical', href: webPage },
+    { rel: 'image_src', href: shareImage }, // older crawlers (VK, some chat apps) read this instead of og:image
+  ],
   meta: [
+    // Discord colours its embed stripe with theme-color: use the post's accent for crawlers.
+    { name: 'theme-color', content: () => (requester.value === 'other' ? undefined : share.value.accent), key: 'theme-color-post', tagPriority: 'critical' },
     { name: 'telegram:channel', content: () => site.value.telegramChannel || undefined },
     // Which content version this response carries: the refresh waits until every app sees the new one.
     { name: 'syndica:version', content: () => post.value.version },

@@ -11,6 +11,7 @@ function predictLayout(app: PlatformKey, w?: number, h?: number, card?: string):
     case 'facebook': return w < 200 || h < 200 ? 'no image (under 200×200)' : w < 600 || h < 315 ? 'compact card' : 'large card'
     case 'whatsapp': return w < 100 ? 'no image (under 100 px)' : w < 300 ? 'compact card (thumbnail beside text)' : 'large card (full-width image)'
     case 'linkedin': return w < 401 ? 'compact card (thumbnail)' : 'large card'
+    case 'imessage': return w < 300 ? 'compact card (small icon beside the title)' : 'large card'
     case 'x': return card === 'summary' ? 'compact card (small square)' : 'large card'
     default: return w >= 400 && r >= 1.2 ? 'large card' : 'compact card (thumbnail)'
   }

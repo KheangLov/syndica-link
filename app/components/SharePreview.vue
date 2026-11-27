@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Approximate mock of how each app draws a link card. Real apps differ slightly by version.
 const props = defineProps<{
-  app: 'telegram' | 'facebook' | 'messenger' | 'whatsapp' | 'linkedin' | 'x' | 'discord' | 'slack'
+  app: 'telegram' | 'facebook' | 'messenger' | 'whatsapp' | 'linkedin' | 'x' | 'discord' | 'slack' | 'imessage' | 'chat'
   siteName: string; domain: string; title: string; description?: string; image?: string
   layout: 'large' | 'compact'; loading?: boolean
 }>()
@@ -82,6 +82,28 @@ const compact = computed(() => props.layout === 'compact')
         <div v-if="image && compact" class="img img--thumb dc__thumb"><img :src="image" alt=""></div>
       </div>
       <div v-if="image && !compact" class="img img--wide dc__img"><img :src="image" alt=""></div>
+    </div>
+
+    <!-- iMessage: grey bubble, big image on top, or a small icon beside the title -->
+    <div v-else-if="app === 'imessage'" class="im" :class="{ 'im--row': compact }">
+      <div v-if="image && !compact" class="img img--wide"><img :src="image" alt=""></div>
+      <div class="im__body">
+        <div v-if="image && compact" class="img im__icon"><img :src="image" alt=""></div>
+        <div class="im__text"><div class="im__title">{{ title }}</div><div class="im__domain">{{ domain }}</div></div>
+      </div>
+    </div>
+
+    <!-- LINE / Viber / Zalo / Teams…: plain card -->
+    <div v-else-if="app === 'chat'" class="ch" :class="{ 'ch--row': compact }">
+      <div v-if="image && !compact" class="img img--wide"><img :src="image" alt=""></div>
+      <div class="ch__body">
+        <div v-if="image && compact" class="img img--thumb"><img :src="image" alt=""></div>
+        <div class="ch__text">
+          <div class="ch__title">{{ title }}</div>
+          <div v-if="description" class="ch__desc">{{ description }}</div>
+          <div class="ch__domain">{{ domain }}</div>
+        </div>
+      </div>
     </div>
 
     <!-- Slack: unfurl -->
@@ -170,6 +192,19 @@ const compact = computed(() => props.layout === 'compact')
 .dc__thumb { width: 80px; height: 80px; border-radius: 4px; }
 .dc__img { margin-top: 10px; border-radius: 4px; }
 
+.im { background: #e9e9eb; border-radius: 18px; overflow: hidden; max-width: 300px; color: #000; }
+.im .img--wide { border-radius: 0; }
+.im__body { display: flex; gap: 10px; align-items: center; padding: 9px 12px; }
+.im__icon { width: 40px; height: 40px; border-radius: 6px; flex: none; }
+.im__title { font-weight: 600; font-size: 14px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.im__domain { color: #6b6b70; font-size: 12px; margin-top: 2px; }
+.ch { background: #fff; border: 1px solid #e3e5e8; border-radius: 12px; overflow: hidden; max-width: 320px; color: #111; }
+.ch .img--wide { border-radius: 0; }
+.ch__body { display: flex; gap: 10px; padding: 10px 12px; }
+.ch__text { flex: 1; min-width: 0; }
+.ch__title { font-weight: 700; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ch__desc { font-size: 12.5px; color: #555; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ch__domain { font-size: 11.5px; color: #8a8f98; margin-top: 4px; }
 .sl { border-left: 4px solid #ddd; padding: 2px 0 2px 12px; color: #1d1c1d; max-width: 440px; }
 .sl__body { display: flex; gap: 12px; }
 .sl__text { flex: 1; min-width: 0; }

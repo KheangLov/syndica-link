@@ -5,11 +5,11 @@
 //   "share": {
 //     "default":  { "title", "description", "image", "layout", "accent", "label" },   // all apps
 //     "telegram": { … }, "facebook": { … }, "whatsapp": { … }, "linkedin": { … },
-//     "x": { … }, "discord": { … }, "slack": { … }
+//     "x": { … }, "discord": { … }, "slack": { … }, "imessage": { … }, "chat": { … }
 //   }
 // Every field is optional; an app inherits from "default", which inherits from the post.
 
-export type PlatformKey = 'telegram' | 'facebook' | 'whatsapp' | 'linkedin' | 'x' | 'discord' | 'slack'
+export type PlatformKey = 'telegram' | 'facebook' | 'whatsapp' | 'linkedin' | 'x' | 'discord' | 'slack' | 'imessage' | 'chat'
 export type Layout = 'large' | 'compact'
 export interface ShareFields { title?: string; description?: string; image?: string; layout?: Layout | ''; accent?: string; label?: string }
 export type ShareSettings = Partial<Record<'default' | PlatformKey, ShareFields>>
@@ -33,6 +33,8 @@ export const PLATFORMS: PlatformInfo[] = [
   { key: 'linkedin', name: 'LinkedIn', ua: 'LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)', defaultLayout: 'large', rule: 'At least 1200×627 shows large; narrower than 401 px shows a thumbnail.', titleMax: 70, descMax: 100 },
   { key: 'x', name: 'X', ua: 'Twitterbot/1.0', defaultLayout: 'large', rule: 'summary_large_image shows a wide image; summary shows a small square.', titleMax: 70, descMax: 200 },
   { key: 'discord', name: 'Discord', ua: 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)', defaultLayout: 'large', rule: 'Large images show under the text; small ones as a thumbnail on the right.', titleMax: 256, descMax: 350 },
+  { key: 'imessage', name: 'iMessage', ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0', defaultLayout: 'large', rule: 'Images about 300 px or wider show as a big card; smaller ones as a small icon beside the title. iMessage shows no description.', titleMax: 80, descMax: 200 },
+  { key: 'chat', name: 'Other chat apps', ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) SkypeUriPreview Preview/0.5 skype-url-preview@microsoft.com', defaultLayout: 'large', rule: 'LINE, Viber, Zalo, KakaoTalk, WeChat, Teams, Skype, Google Chat and Snapchat. Rules differ by app; a 1200×630 image works everywhere.', titleMax: 70, descMax: 120 },
   { key: 'slack', name: 'Slack', ua: 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)', defaultLayout: 'large', rule: 'Wide images show under the text; small ones as a thumbnail.', titleMax: 150, descMax: 300 },
 ]
 export const platformInfo = (key: PlatformKey) => PLATFORMS.find((p) => p.key === key)!
@@ -42,13 +44,17 @@ export type Requester = PlatformKey | 'search' | 'other'
 
 export function platformFor(ua = ''): Requester {
   if (/TelegramBot/i.test(ua)) return 'telegram'
+  // iMessage's preview fetcher claims to be both Facebook and Twitter; Facebook itself never does.
+  if (/Facebot Twitterbot/i.test(ua)) return 'imessage'
+  // Chat apps that would otherwise be mistaken for Facebook (LINE) or treated as unknown.
+  if (/line-poker|\bLine\/|Viber|Zalo|kakaotalk-scrap|SkypeUriPreview|Teams|MicroMessenger|WeChat|Google-PageRenderer|Snapchat|Iframely/i.test(ua)) return 'chat'
   if (/WhatsApp/i.test(ua)) return 'whatsapp'
   if (/facebookexternalhit|facebookcatalog|Facebot|meta-externalagent/i.test(ua)) return 'facebook'
   if (/LinkedInBot/i.test(ua)) return 'linkedin'
   if (/Twitterbot/i.test(ua)) return 'x'
   if (/Discordbot/i.test(ua)) return 'discord'
   if (/Slackbot/i.test(ua)) return 'slack'
-  if (/Googlebot|bingbot|Applebot|Pinterest|redditbot|SkypeUriPreview|Mastodon|Bluesky|DuckDuckBot|YandexBot/i.test(ua)) return 'search'
+  if (/Googlebot|bingbot|Applebot|Pinterest|redditbot|Mastodon|Bluesky|DuckDuckBot|YandexBot/i.test(ua)) return 'search'
   return 'other'
 }
 

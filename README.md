@@ -18,7 +18,7 @@ Also included: `sitemap.xml`, `robots.txt` and `feed.xml` (RSS).
 
 An admin tool for previewing, testing and changing how each post looks when it's shared. Sign in with `NUXT_ADMIN_PASSWORD`.
 
-- **Per-app settings** for Telegram, Facebook, WhatsApp, LinkedIn, X, Discord and Slack: title, description, image, accent colour, tile label, and large card or small thumbnail. Each app inherits from *All apps*, which inherits from the post. Messenger uses Facebook's settings when Meta's servers fetch the link, and WhatsApp's when the sender's phone does.
+- **Per-app settings** for Telegram, Facebook, WhatsApp, LinkedIn, X, Discord, Slack, iMessage and other chat apps (LINE, Viber, Zalo, KakaoTalk, WeChat, Teams, Skype, Google Chat, Snapchat): title, description, image, accent colour, tile label, and large card or small thumbnail. Each app inherits from *All apps*, which inherits from the post. Messenger uses Facebook's settings when Meta's servers fetch the link, and WhatsApp's when the sender's phone does.
 - **Live mock previews** of every app's card, updated as you type. Images are drawn from the unsaved settings.
 - **Live check:** fetches the published page exactly as the chosen app's crawler does, then checks it against that app's rules (title and description length, one image, file size and dimensions, which layout it will show).
 - **Test tools:** fresh never-shared test links, open-in-app buttons, the Facebook Sharing Debugger and LinkedIn Post Inspector, and **Refresh apps now** (image warm-up, Facebook re-scrape, @WebpageBot).

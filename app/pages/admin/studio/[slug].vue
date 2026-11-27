@@ -13,6 +13,7 @@ const APPS: { key: Tab; name: string }[] = [
   { key: 'default', name: 'All apps' }, { key: 'telegram', name: 'Telegram' }, { key: 'facebook', name: 'Facebook' },
   { key: 'messenger', name: 'Messenger' }, { key: 'whatsapp', name: 'WhatsApp' }, { key: 'linkedin', name: 'LinkedIn' },
   { key: 'x', name: 'X' }, { key: 'discord', name: 'Discord' }, { key: 'slack', name: 'Slack' },
+  { key: 'imessage', name: 'iMessage' }, { key: 'chat', name: 'Other chat apps' },
 ]
 const PREVIEW_APPS = APPS.filter((a) => a.key !== 'default').map((a) => a.key as Exclude<Tab, 'default'>)
 

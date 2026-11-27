@@ -54,7 +54,14 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#0B1220', media: '(prefers-color-scheme: dark)' },
         { name: 'theme-color', content: '#F7F8FB', media: '(prefers-color-scheme: light)' },
       ],
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        // PNG icons: iMessage, Teams, Slack, Telegram and Android can't use an SVG favicon.
+        { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/favicon-48.png' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
+      ],
     },
   },
 
