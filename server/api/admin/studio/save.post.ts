@@ -24,10 +24,15 @@ export default defineEventHandler(async (event) => {
     body: { message: `Share settings: ${slug}`, content: Buffer.from(text).toString('base64'), sha: file.sha, branch },
   })
 
-  // Pick up the new commit, then refresh this post's previews in the background.
+  // The version the share link will serve once every server copy has this commit.
+  const snap0 = await getContent()
+  const version = postVersion(text, snap0.site)
+
+  // Pick up the new commit here, then (in the background) wait until every app gets the new
+  // version from the live link, and refresh Telegram, Facebook/Messenger and the image cache.
   const origin = publicOrigin(event)
   waitUntil((async () => {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
       const snap = await getContent(true)
       if (snap.ref === res.commit.sha) break
       await new Promise((r) => setTimeout(r, 1500))
@@ -35,5 +40,5 @@ export default defineEventHandler(async (event) => {
     await refreshPreviews(origin, [slug])
   })().catch((e) => console.error('[studio] refresh after save failed', e)))
 
-  return { ok: true, commit: res.commit.sha.slice(0, 7), commitUrl: res.commit.html_url }
+  return { ok: true, commit: res.commit.sha.slice(0, 7), commitUrl: res.commit.html_url, version }
 })

@@ -71,7 +71,11 @@ useSeoMeta({
 useHead({
   htmlAttrs: { lang: () => post.value.lang || 'en' },
   link: [{ rel: 'canonical', href: webPage }],
-  meta: [{ name: 'telegram:channel', content: () => site.value.telegramChannel || undefined }],
+  meta: [
+    { name: 'telegram:channel', content: () => site.value.telegramChannel || undefined },
+    // Which content version this response carries: the refresh waits until every app sees the new one.
+    { name: 'syndica:version', content: () => post.value.version },
+  ],
   script: [{
     type: 'application/ld+json',
     innerHTML: () => JSON.stringify({

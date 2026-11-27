@@ -23,6 +23,13 @@ export async function refreshPreviews(origin: string, slugs: string[] | 'all', o
   const log = (m: string) => { report.push(m); console.info('[preview-refresh]', m) }
   if (!urls.length) { log('no matching posts'); return report }
 
+  // 0. Don't let any app cache an old version: wait until the live link serves the new one to every app.
+  //    (in parallel, capped at 25 s so the whole refresh fits in the 60 s function limit)
+  await Promise.all(posts.slice(0, 12).map(async (p) => {
+    const live = await waitForLive(origin, p.slug, p.version, 25_000)
+    log(live ? `live: ${p.slug} @ ${p.version} for every app` : `live check timed out for ${p.slug} @ ${p.version}; refreshing anyway`)
+  }))
+
   // 1. Warm images (and the page itself) the way each app requests them.
   await Promise.all(posts.flatMap((p) => AGENTS.map(async (ua) => {
     try {

@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     contentRepo: 'KheangLov/syndica-web', // NUXT_CONTENT_REPO
     contentBranch: 'main', // NUXT_CONTENT_BRANCH
     contentPagesUrl: 'https://syndica-web.vercel.app/', // NUXT_CONTENT_PAGES_URL
-    contentRefreshSeconds: 60, // NUXT_CONTENT_REFRESH_SECONDS — how often to check for a new commit
+    contentRefreshSeconds: 0, // NUXT_CONTENT_REFRESH_SECONDS — 0 = auto: every 5 s with a GitHub token, 30 s without
     githubToken: '', // NUXT_GITHUB_TOKEN — optional, raises the GitHub API limit from 60 to 5000/h
     githubWriteToken: '', // NUXT_GITHUB_WRITE_TOKEN — Contents: read & write on syndica-web, for Share studio saves
     revalidateSecret: '', // NUXT_REVALIDATE_SECRET — for POST /api/revalidate (GitHub push webhook)

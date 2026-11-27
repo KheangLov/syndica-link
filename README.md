@@ -24,6 +24,14 @@ An admin tool for previewing, testing and changing how each post looks when it's
 - **Test tools:** fresh never-shared test links, open-in-app buttons, the Facebook Sharing Debugger and LinkedIn Post Inspector, and **Refresh apps now** (image warm-up, Facebook re-scrape, @WebpageBot).
 - **Save & publish** commits the settings into the post's JSON in syndica-web (`"share": { "default": {…}, "facebook": {…}, … }`), so posts and their share settings live only there. The publish refresh then updates the apps. This needs `NUXT_GITHUB_WRITE_TOKEN`: a fine-grained token with **Contents: read and write** on syndica-web.
 
+### How a save reaches the real share link
+
+1. **Save & publish** commits to syndica-web and returns the new content version.
+2. Every syndica-link server copy checks GitHub for a new commit every 5 s (a conditional request, so it's free when nothing changed), so all copies pick up the save within seconds.
+3. Post pages carry `<meta name="syndica:version">`. The refresh fetches the live share link as every app's crawler and waits until **all** of them get the new version twice in a row. Only then does it warm the images, re-scrape Facebook/Messenger and ping @WebpageBot. An app is never told to re-fetch while an old copy could still answer.
+4. The studio shows a **live panel** with a chip per app that turns green when that app gets the new version. **Live status** runs the same check at any time.
+5. syndica-web rebuilds too, and its own static post pages follow the *All apps* title, description and image.
+
 Each app gets its own images: `/og/<slug>/<version>/<app>.jpg` (wide) and `/og/<slug>/<version>/<app>-sq256.jpg` (tile).
 
 ## Develop

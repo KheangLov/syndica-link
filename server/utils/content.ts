@@ -36,8 +36,11 @@ function cfg() {
     repo: String(c.contentRepo),
     branch: String(c.contentBranch || 'main'),
     pagesUrl: String(c.contentPagesUrl).replace(/\/?$/, '/'),
-    refreshMs: Number(c.contentRefreshSeconds || 60) * 1000,
-    token: String(c.githubToken || ''),
+    // How often each server copy checks GitHub for a new commit. Checks that find nothing new
+    // are conditional (ETag → 304) and don't count against GitHub's limit when authenticated,
+    // so with a token every copy checks every 5 s and a save reaches all copies within seconds.
+    refreshMs: (Number(c.contentRefreshSeconds) || (c.githubToken || c.githubWriteToken ? 5 : 30)) * 1000,
+    token: String(c.githubToken || c.githubWriteToken || ''),
   }
 }
 
@@ -52,6 +55,9 @@ async function gh<T>(path: string, accept = 'application/vnd.github+json'): Prom
 
 const text = (url: string) => $fetch<string>(url, { responseType: 'text', timeout: 8000, headers: { 'User-Agent': 'syndica-link' } })
 
+/** Content version of a post file: part of image URLs and the syndica:version tag. */
+export const postVersion = (raw: string, site: Site) => hash(raw + JSON.stringify(site) + OG_DESIGN)
+
 function normalize(slug: string, raw: string, site: Site): Post | null {
   let p: any
   try { p = JSON.parse(raw) } catch { console.warn(`[syndica-link] invalid JSON in ${slug}.json`); return null }
@@ -63,15 +69,36 @@ function normalize(slug: string, raw: string, site: Site): Post | null {
     blocks: p.blocks || [],
     accent: p.accent || site.accent,
     readingTime: readingTime(p.blocks),
-    version: hash(raw + JSON.stringify(site) + OG_DESIGN), // changes with the post, site branding or card design
+    version: postVersion(raw, site), // changes with the post (incl. share settings), site branding or card design
     image: p.cover || null, // null → generated /og/<slug>.png
     imageAlt: p.cover ? p.coverAlt || p.title : `${p.title} — ${site.name}`,
   }
 }
 
+let commitEtag = ''
+/** Newest commit SHA on the branch; a conditional request, so "no change" costs nothing. */
+async function latestSha(): Promise<string> {
+  const { repo, branch, token } = cfg()
+  const res = await $fetch.raw<string>(`https://api.github.com/repos/${repo}/commits/${branch}`, {
+    responseType: 'text',
+    ignoreResponseError: true,
+    timeout: 5000,
+    headers: {
+      Accept: 'application/vnd.github.sha',
+      'User-Agent': 'syndica-link',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(commitEtag && state.snap ? { 'If-None-Match': commitEtag } : {}),
+    },
+  })
+  if (res.status === 304 && state.snap) return state.snap.ref
+  if (!res.ok) throw new Error(`GitHub commit check failed: ${res.status}`)
+  commitEtag = res.headers.get('etag') || ''
+  return String(res._data).trim()
+}
+
 async function loadGithub(): Promise<Snapshot> {
-  const { repo, branch } = cfg()
-  const sha = (await gh<string>(`/repos/${repo}/commits/${branch}`, 'application/vnd.github.sha')).trim()
+  const { repo } = cfg()
+  const sha = await latestSha()
   if (state.snap?.ref === sha) return { ...state.snap, loadedAt: Date.now() }
   // (images: paths under public/images, for the Share studio's image picker)
 

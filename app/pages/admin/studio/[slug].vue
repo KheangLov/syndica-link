@@ -98,13 +98,38 @@ const shownApps = computed(() => (tab.value === 'default' ? PREVIEW_APPS : [tab.
 
 // ---------- save, refresh ----------
 const saving = ref(false)
+// After saving: watch the real share link until every app gets the new version.
+const publish = ref<null | { commit: string; commitUrl: string; version: string; apps: { app: string; ok: boolean }[]; done: boolean; timedOut: boolean }>(null)
+let pollTimer: any
+async function pollLive(startedAt: number) {
+  if (!publish.value) return
+  try {
+    const r = await call<any>('/api/admin/studio/live', { slug: slug.value, version: publish.value.version })
+    publish.value.apps = r.apps
+    if (r.apps.every((a: any) => a.ok)) {
+      publish.value.done = true
+      if (publish.value.commit) load() // only after a save; never wipe unsaved edits
+      return
+    }
+  } catch {}
+  if (Date.now() - startedAt > 120_000) { publish.value.timedOut = true; return }
+  pollTimer = setTimeout(() => pollLive(startedAt), 3000)
+}
+onBeforeUnmount(() => clearTimeout(pollTimer))
 async function save() {
   saving.value = true
   try {
     const r = await call<any>('/api/admin/studio/save', { slug: slug.value, share: draft.value })
-    toast(r.unchanged ? 'Nothing changed' : `Published (commit ${r.commit}). Apps refresh in about a minute.`)
-    if (!r.unchanged) setTimeout(load, 4000)
+    if (r.unchanged) { toast('Nothing changed'); return }
+    publish.value = { commit: r.commit, commitUrl: r.commitUrl, version: r.version, apps: [], done: false, timedOut: false }
+    clearTimeout(pollTimer)
+    pollLive(Date.now())
   } catch (e: any) { toast(e.message, 'error') } finally { saving.value = false }
+}
+async function checkLiveNow() {
+  publish.value = { commit: '', commitUrl: '', version: post.value.version, apps: [], done: false, timedOut: false }
+  clearTimeout(pollTimer)
+  pollLive(Date.now())
 }
 const refreshing = ref(false)
 const refreshReport = ref<string[]>([])
@@ -162,9 +187,27 @@ const info = (k: Tab) => (k === 'default' || k === 'messenger' ? null : platform
         <a :href="webUrlFor(`/posts/${slug}`)" target="_blank" rel="noopener" class="muted">Open on syndica-web ↗</a>
         <span class="grow" />
         <SqChip v-if="dirty" color="warning" variant="tonal" size="small">Unsaved changes</SqChip>
+        <SqBtn variant="text" size="small" prepend-icon="refresh" @click="checkLiveNow">Live status</SqBtn>
         <SqBtn variant="text" :disabled="!dirty" @click="load">Discard</SqBtn>
         <SqBtn :loading="saving" :disabled="!dirty || !data.canSave" @click="save">Save & publish</SqBtn>
       </div>
+      <SqSheet v-if="publish" border rounded="xl" class="panel mb publish">
+        <div class="panel__title">
+          <h2 class="section-title">
+            {{ publish.done ? 'Live everywhere' : publish.timedOut ? 'Still waiting on some apps' : publish.commit ? 'Publishing your changes…' : 'Checking the live link…' }}
+          </h2>
+          <a v-if="publish.commitUrl" :href="publish.commitUrl" target="_blank" rel="noopener" class="small">Commit {{ publish.commit }} ↗</a>
+        </div>
+        <div class="links">
+          <SqChip v-for="a in data.platforms" :key="a.key" size="small" :color="publish.apps.find((x) => x.app === a.key)?.ok ? 'success' : undefined" variant="tonal" :prepend-icon="publish.apps.find((x) => x.app === a.key)?.ok ? 'check' : 'clock'">{{ a.name }}</SqChip>
+        </div>
+        <p class="muted small">
+          <template v-if="publish.done">Every app now gets version <code>{{ publish.version }}</code> from {{ shareUrl }}.<template v-if="publish.commit"> Telegram, Facebook and Messenger are being refreshed in the background; new shares use the new card straight away.</template></template>
+          <template v-else-if="publish.timedOut">Some apps still got an older version after 2 minutes. Check that the GitHub token is set in Vercel, then press Check again.</template>
+          <template v-else>Waiting until the live share link serves version <code>{{ publish.version }}</code> to every app. This usually takes 5–20 seconds.</template>
+        </p>
+        <div class="links"><SqBtn v-if="publish.done || publish.timedOut" size="small" variant="text" @click="publish = null">Close</SqBtn><SqBtn v-if="publish.timedOut" size="small" variant="tonal" @click="checkLiveNow">Check again</SqBtn></div>
+      </SqSheet>
       <SqAlert v-if="!data.canSave" type="info" variant="tonal" class="mb" text="Saving needs NUXT_GITHUB_WRITE_TOKEN in Vercel: a fine-grained GitHub token with Contents read & write on syndica-web. Previews and checks work without it." />
 
       <SqTabs v-model="tab" :items="APPS.map((a) => ({ title: a.name, value: a.key }))" class="tabs" />
@@ -267,6 +310,7 @@ const info = (k: Tab) => (k === 'default' || k === 'messenger' ? null : platform
 </template>
 
 <style scoped>
+.publish code { font-size: 0.85em; }
 .bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; font-size: 0.9rem; }
 .bar a { text-decoration: none; }
 .grow { flex: 1; }
