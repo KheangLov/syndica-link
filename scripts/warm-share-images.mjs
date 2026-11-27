@@ -10,6 +10,7 @@ const AGENTS = {
   facebook: 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
   whatsapp: 'WhatsApp/2.24.1.6 A',
   telegram: 'TelegramBot (like TwitterBot)',
+  phone: 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Mobile Safari/537.36',
 }
 
 const { posts } = await (await fetch(`${BASE}/api/site`)).json()
@@ -18,14 +19,18 @@ let ok = 0, fail = 0
 for (const path of paths) {
   for (const [app, ua] of Object.entries(AGENTS)) {
     try {
-      const html = await (await fetch(BASE + path, { headers: { 'User-Agent': ua } })).text()
+      const t0 = Date.now()
+      const page = await fetch(BASE + path, { headers: { 'User-Agent': ua } })
+      const html = await page.text()
+      const pageMs = Date.now() - t0
+      const at = Buffer.byteLength(html.slice(0, html.indexOf('og:image')))
       const img = html.match(/property="og:image" content="([^"]+)"/)?.[1]
       if (!img) throw new Error('no og:image')
       const t = Date.now()
       const r = await fetch(img, { headers: { 'User-Agent': ua } })
       await r.arrayBuffer()
       if (!r.ok) throw new Error(`image ${r.status}`)
-      console.log(`✓ ${app.padEnd(8)} ${path}  ${img.split('/og/')[1]}  ${Date.now() - t}ms  cache:${r.headers.get('x-vercel-cache') || '-'}`)
+      console.log(`✓ ${app.padEnd(8)} ${path}  page ${page.status} ${pageMs}ms ${Buffer.byteLength(html)}B (og:image @${at}B, ${page.headers.get('content-encoding') || 'identity'})  image ${img.split('/og/')[1]} ${r.status} ${Date.now() - t}ms ${r.headers.get('content-type')} cache:${r.headers.get('x-vercel-cache') || '-'}`)
       ok++
     } catch (e) {
       console.log(`✗ ${app.padEnd(8)} ${path}  ${e.message}`)

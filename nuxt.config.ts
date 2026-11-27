@@ -28,10 +28,21 @@ export default defineNuxtConfig({
     githubToken: '', // NUXT_GITHUB_TOKEN — optional, raises the GitHub API limit from 60 to 5000/h
     revalidateSecret: '', // NUXT_REVALIDATE_SECRET — for POST /api/revalidate (GitHub push webhook)
     adminPassword: '', // NUXT_ADMIN_PASSWORD — unlocks /admin/telegram (falls back to NUXT_REVALIDATE_SECRET)
+    // Link-preview refresh after a publish (webhook → /api/revalidate). All optional.
+    telegramApiId: '', // NUXT_TELEGRAM_API_ID
+    telegramApiHash: '', // NUXT_TELEGRAM_API_HASH
+    telegramSession: '', // NUXT_TELEGRAM_SESSION (from /admin/telegram)
+    fbAppId: '', // NUXT_FB_APP_ID
+    fbAppSecret: '', // NUXT_FB_APP_SECRET
     public: {
       siteUrl: '', // NUXT_PUBLIC_SITE_URL — public origin; falls back to the request's own host
       webUrl: 'https://syndica-web.vercel.app/', // NUXT_PUBLIC_WEB_URL — the syndica-web app
     },
+  },
+
+  nitro: {
+    // Webhook refreshes (Telegram + Facebook + image warm-up) can take ~30 s.
+    vercel: { functions: { maxDuration: 60 } },
   },
 
   app: {
